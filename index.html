@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OKAB — Cinematic Sound Designer</title>
+  <meta name="description" content="OKAB is a cinematic sound designer VST plugin built to turn ordinary audio into powerful, film-ready character. $45 one-time purchase." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:    #080808;
+      --dark:     #0f0f0f;
+      --surface:  #141414;
+      --border:   #252525;
+      --muted:    #444;
+      --silver:   #c8c8c8;
+      --white:    #e8e8e8;
+      --gold:     #c8a96e;
+      --gold-dim: #9a7d4a;
+      --glow:     rgba(200, 169, 110, 0.18);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Barlow', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: default;
+    }
+
+    /* ── GRAIN OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0.032;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      background: linear-gradient(to bottom, rgba(8,8,8,0.95), transparent);
+      transition: background 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(8,8,8,0.97);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      height: 32px;
+      filter: brightness(0) invert(1);
+      opacity: 0.92;
+    }
+    .nav-buy {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--black);
+      background: var(--gold);
+      padding: 9px 22px;
+      text-decoration: none;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+      transition: background 0.2s, transform 0.15s;
+    }
+    .nav-buy:hover {
+      background: #d9b97e;
+      transform: translateY(-1px);
+    }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 60%, rgba(200,169,110,0.055) 0%, transparent 70%),
+        radial-gradient(ellipse 100% 60% at 50% 100%, rgba(200,169,110,0.03) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-lines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .hero-lines::before,
+    .hero-lines::after {
+      content: '';
+      position: absolute;
+      left: -20%;
+      right: -20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(200,169,110,0.12) 30%, rgba(200,169,110,0.25) 50%, rgba(200,169,110,0.12) 70%, transparent 100%);
+    }
+    .hero-lines::before { top: 35%; }
+    .hero-lines::after  { top: 65%; }
+
+    .hero-logo {
+      width: 180px;
+      filter: brightness(0) invert(1);
+      opacity: 0.9;
+      margin-bottom: 48px;
+      position: relative;
+    }
+    .hero-tag {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 500;
+      font-size: 0.72rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero-tag::before,
+    .hero-tag::after {
+      content: '';
+      width: 32px;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.6;
+    }
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 8vw, 7.5rem);
+      line-height: 0.95;
+      letter-spacing: 0.01em;
+      color: var(--white);
+      position: relative;
+      max-width: 900px;
+      margin-bottom: 32px;
+    }
+    h1 span { color: var(--gold); }
+    .hero-sub {
+      font-size: clamp(0.95rem, 1.5vw, 1.05rem);
+      line-height: 1.75;
+      color: var(--silver);
+      max-width: 560px;
+      margin: 0 auto 48px;
+      position: relative;
+      opacity: 0.85;
+    }
+    .hero-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+    }
+    .btn-buy {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #0a0a0a;
+      background: var(--gold);
+      padding: 16px 48px;
+      text-decoration: none;
+      clip-path: polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%);
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 0 rgba(200,169,110,0);
+      display: inline-block;
+    }
+    .btn-buy:hover {
+      background: #d9b97e;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px rgba(200,169,110,0.25);
+    }
+    .btn-buy:active { transform: translateY(0); }
+    .hero-note {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .hero-note span {
+      color: var(--muted);
+      margin: 0 6px;
+    }
+
+    /* ── PLUGIN SHOWCASE ── */
+    #plugin-showcase {
+      background: var(--black);
+      padding: 80px 48px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .showcase-glow {
+      position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 900px; height: 300px;
+      background: radial-gradient(ellipse at 50% 100%, rgba(200,169,110,0.13) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .showcase-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .showcase-label::before,
+    .showcase-label::after {
+      content: '';
+      width: 40px;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.5;
+    }
+    .plugin-frame {
+      display: inline-block;
+      position: relative;
+      max-width: 1000px;
+      width: 100%;
+    }
+    .plugin-frame::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border: 1px solid rgba(200,169,110,0.2);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .plugin-frame::after {
+      content: '';
+      position: absolute;
+      bottom: -40px; left: 10%; right: 10%;
+      height: 80px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.2) 0%, transparent 70%);
+      filter: blur(12px);
+      pointer-events: none;
+    }
+    .plugin-img {
+      width: 100%;
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+    .plugin-tags {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 48px 0 80px;
+    }
+    .plugin-tag {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .plugin-tag::before {
+      content: '';
+      width: 4px; height: 4px;
+      background: var(--gold);
+      opacity: 0.6;
+      transform: rotate(45deg);
+    }
+
+    /* ── DIAGONAL DIVIDER ── */
+    .divider-slant {
+      width: 100%;
+      height: 60px;
+      background: var(--surface);
+      clip-path: polygon(0 100%, 100% 0, 100% 100%);
+      margin-top: -1px;
+    }
+    .divider-slant-rev {
+      width: 100%;
+      height: 60px;
+      background: var(--surface);
+      clip-path: polygon(0 0, 100% 100%, 0 100%);
+      margin-bottom: -1px;
+    }
+
+    /* ── SECTION BASE ── */
+    section {
+      padding: 100px 48px;
+      position: relative;
+    }
+    .section-tag {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 500;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: var(--gold);
+    }
+    h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.2rem, 4vw, 3.8rem);
+      letter-spacing: 0.02em;
+      line-height: 1;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 0.95rem;
+      color: var(--silver);
+      opacity: 0.75;
+      line-height: 1.7;
+      max-width: 520px;
+    }
+
+    /* ── FEATURES ── */
+    #features {
+      background: var(--surface);
+    }
+    .features-header {
+      max-width: 1200px;
+      margin: 0 auto 60px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1px;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .feat-card {
+      background: var(--surface);
+      padding: 40px 32px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .feat-card::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .feat-card:hover { background: #1a1a1a; }
+    .feat-card:hover::before { transform: scaleX(1); }
+    .feat-icon {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .feat-icon svg { width: 100%; height: 100%; }
+    .feat-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.06em;
+      color: var(--white);
+      margin-bottom: 10px;
+    }
+    .feat-desc {
+      font-size: 0.85rem;
+      color: var(--silver);
+      opacity: 0.65;
+      line-height: 1.65;
+    }
+
+    /* ── USE CASES ── */
+    #usecases {
+      background: var(--black);
+    }
+    .usecases-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .uc-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 36px;
+    }
+    .uc-pill {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 500;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      color: var(--silver);
+      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+      transition: border-color 0.25s, color 0.25s, background 0.25s;
+      background: transparent;
+    }
+    .uc-pill:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(200,169,110,0.06);
+    }
+    .uc-visual {
+      position: relative;
+      height: 320px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      clip-path: polygon(20px 0%, 100% 0%, calc(100% - 20px) 100%, 0% 100%);
+    }
+    .uc-visual-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 50%, rgba(200,169,110,0.08) 0%, transparent 70%);
+    }
+    .uc-waveform {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 100px;
+    }
+    .uc-bar {
+      width: 3px;
+      background: var(--gold);
+      border-radius: 2px;
+      opacity: 0.6;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scaleY(1); opacity: 0.4; }
+      50%       { transform: scaleY(1.6); opacity: 0.9; }
+    }
+
+    /* ── WORKFLOW ── */
+    #workflow {
+      background: var(--surface);
+    }
+    .workflow-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .workflow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 40px;
+    }
+    .wf-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .wf-step:last-child { border-bottom: none; }
+    .wf-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      color: var(--gold);
+      opacity: 0.4;
+      min-width: 40px;
+      line-height: 1;
+    }
+    .wf-text h4 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+    .wf-text p {
+      font-size: 0.85rem;
+      color: var(--silver);
+      opacity: 0.65;
+      line-height: 1.6;
+    }
+    .workflow-quote {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 300;
+      font-size: clamp(1.3rem, 2.5vw, 1.9rem);
+      line-height: 1.5;
+      color: var(--silver);
+      border-left: 3px solid var(--gold);
+      padding-left: 28px;
+    }
+    .workflow-quote strong {
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    /* ── PRICING ── */
+    #pricing {
+      background: var(--black);
+      text-align: center;
+    }
+    .pricing-inner {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .price-card {
+      border: 1px solid var(--border);
+      padding: 60px 48px;
+      margin-top: 48px;
+      position: relative;
+      clip-path: polygon(24px 0%, 100% 0%, calc(100% - 24px) 100%, 0% 100%);
+      background: var(--surface);
+    }
+    .price-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 24px; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+    .price-amount {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 5rem;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .price-amount sup {
+      font-size: 2rem;
+      vertical-align: top;
+      margin-top: 14px;
+      display: inline-block;
+    }
+    .price-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+    .price-features {
+      list-style: none;
+      margin-bottom: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .price-features li {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--silver);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .price-features li::before {
+      content: '';
+      width: 16px;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.6;
+    }
+    .btn-buy-lg {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #0a0a0a;
+      background: var(--gold);
+      padding: 18px 64px;
+      text-decoration: none;
+      clip-path: polygon(18px 0%, 100% 0%, calc(100% - 18px) 100%, 0% 100%);
+      display: inline-block;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      margin-bottom: 18px;
+    }
+    .btn-buy-lg:hover {
+      background: #d9b97e;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 50px rgba(200,169,110,0.3);
+    }
+    .price-sub {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 40px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-logo {
+      height: 22px;
+      filter: brightness(0) invert(1);
+      opacity: 0.4;
+    }
+    .footer-copy {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── ANIMATIONS ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
+                  transform 0.7s cubic-bezier(0.4,0,0.2,1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 16px 24px; }
+      section { padding: 72px 24px; }
+      .usecases-inner,
+      .workflow-inner { grid-template-columns: 1fr; gap: 48px; }
+      .uc-visual { display: none; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .price-card { padding: 40px 24px; clip-path: polygon(14px 0%, 100% 0%, calc(100% - 14px) 100%, 0% 100%); }
+      .btn-buy-lg { padding: 16px 40px; }
+      h1 { font-size: 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <img src="logo.png" alt="OKAB Audio" class="nav-logo" />
+    <a href="YOUR_STRIPE_LINK" class="nav-buy">Get OKAB — $45</a>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-lines"></div>
+    <img src="logo.png" alt="OKAB Audio" class="hero-logo" />
+    <p class="hero-tag">Cinematic Sound Designer</p>
+    <h1>Turn Ordinary Audio<br /><span>Into Film-Ready</span><br />Character</h1>
+    <p class="hero-sub">
+      OKAB is a cinematic sound designer built for one job — turning ordinary audio into powerful,
+      film-ready character. Drop it on a bus, feed it real sound, and it responds with weight,
+      movement, space, and emotion.
+    </p>
+    <div class="hero-cta">
+      <a href="YOUR_STRIPE_LINK" class="btn-buy">Get OKAB — $45</a>
+      <p class="hero-note">One-time purchase <span>·</span> No subscription <span>·</span> VST3 / AU / AAX</p>
+    </div>
+  </section>
+
+  <!-- PLUGIN SHOWCASE -->
+  <section id="plugin-showcase">
+    <p class="showcase-label reveal">The Interface</p>
+    <div class="plugin-frame reveal reveal-delay-1">
+      <img src="plugin.png" alt="OKAB Plugin Interface" class="plugin-img" />
+    </div>
+    <div class="plugin-tags reveal reveal-delay-2">
+      <span class="plugin-tag">Resonance Core</span>
+      <span class="plugin-tag">Impact Engine</span>
+      <span class="plugin-tag">Sub Foundation</span>
+      <span class="plugin-tag">Bloom Section</span>
+      <span class="plugin-tag">Stereo Scope</span>
+      <span class="plugin-tag">33 Factory Presets</span>
+    </div>
+    <div class="showcase-glow"></div>
+  </section>
+
+  <!-- SLANT -->
+  <div class="divider-slant"></div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="features-header reveal">
+      <p class="section-tag">Sound Dimensions</p>
+      <h2>Five Dimensions.<br />One Engine.</h2>
+      <p class="section-sub">Shape deep sub pressure, tight impact, harmonic body, airy bloom, and expressive overtone detail — without building layers from scratch.</p>
+    </div>
+    <div class="features-grid">
+
+      <div class="feat-card reveal reveal-delay-1">
+        <div class="feat-icon">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 28 Q10 8 18 28 Q26 8 32 28" stroke="#c8a96e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <line x1="18" y1="32" x2="18" y2="4" stroke="#c8a96e" stroke-width="1" opacity="0.3"/>
+          </svg>
+        </div>
+        <p class="feat-name">Sub Pressure</p>
+        <p class="feat-desc">Deep foundational weight that fills the room. The kind of low end that makes a scene feel inevitable.</p>
+      </div>
+
+      <div class="feat-card reveal reveal-delay-2">
+        <div class="feat-icon">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="14" width="4" height="16" fill="#c8a96e" opacity="0.8"/>
+            <rect x="14" y="8" width="4" height="22" fill="#c8a96e"/>
+            <rect x="22" y="18" width="4" height="12" fill="#c8a96e" opacity="0.6"/>
+            <rect x="30" y="22" width="4" height="8" fill="#c8a96e" opacity="0.3"/>
+          </svg>
+        </div>
+        <p class="feat-name">Tight Impact</p>
+        <p class="feat-desc">Punch and transient energy shaped for cinematic hits — braams, drops, stingers, and moments of force.</p>
+      </div>
+
+      <div class="feat-card reveal reveal-delay-3">
+        <div class="feat-icon">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="18" r="10" stroke="#c8a96e" stroke-width="1.5" fill="none"/>
+            <circle cx="18" cy="18" r="6" stroke="#c8a96e" stroke-width="1" fill="none" opacity="0.5"/>
+            <circle cx="18" cy="18" r="2" fill="#c8a96e"/>
+          </svg>
+        </div>
+        <p class="feat-name">Harmonic Body</p>
+        <p class="feat-desc">Rich midrange density and tonal warmth that gives your mix a spine — character that cuts through.</p>
+      </div>
+
+      <div class="feat-card reveal reveal-delay-4">
+        <div class="feat-icon">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6 C8 6 4 14 4 18 C4 22 8 30 18 30 C28 30 32 22 32 18 C32 14 28 6 18 6Z" stroke="#c8a96e" stroke-width="1.5" fill="none"/>
+            <path d="M18 10 C12 10 10 14 10 18 C10 22 12 26 18 26 C24 26 26 22 26 18" stroke="#c8a96e" stroke-width="1" fill="none" opacity="0.4"/>
+          </svg>
+        </div>
+        <p class="feat-name">Airy Bloom</p>
+        <p class="feat-desc">Open, atmospheric high-end that breathes life into pads, textures, and spatial processing.</p>
+      </div>
+
+      <div class="feat-card reveal reveal-delay-1">
+        <div class="feat-icon">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="8" y1="28" x2="28" y2="8" stroke="#c8a96e" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="12" cy="24" r="2" fill="#c8a96e"/>
+            <circle cx="18" cy="18" r="2" fill="#c8a96e" opacity="0.7"/>
+            <circle cx="24" cy="12" r="2" fill="#c8a96e" opacity="0.4"/>
+          </svg>
+        </div>
+        <p class="feat-name">Overtone Detail</p>
+        <p class="feat-desc">Expressive harmonic shimmer for enhanced leads, orchestral movement, and textural complexity.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SLANT REV -->
+  <div style="background: var(--surface);">
+    <div style="width:100%;height:60px;background:var(--black);clip-path:polygon(0 0,100% 100%,0 100%);"></div>
+  </div>
+
+  <!-- USE CASES -->
+  <section id="usecases">
+    <div class="usecases-inner">
+      <div class="reveal">
+        <p class="section-tag">Built For</p>
+        <h2>Big Screen<br />Energy. Fast.</h2>
+        <p class="section-sub">
+          From dark bass tones and trailer braams to atmospheric piano texture and lead enhancement,
+          OKAB gives you a fast path to cinematic power.
+        </p>
+        <div class="uc-pills">
+          <span class="uc-pill">Dark Bass Tone</span>
+          <span class="uc-pill">Trailer Braams</span>
+          <span class="uc-pill">Atmospheric Piano</span>
+          <span class="uc-pill">Lead Enhancement</span>
+          <span class="uc-pill">Bus Processing</span>
+          <span class="uc-pill">Hybrid Scoring</span>
+        </div>
+      </div>
+      <div class="uc-visual reveal reveal-delay-2">
+        <div class="uc-visual-bg"></div>
+        <div class="uc-waveform" id="waveform"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLANT -->
+  <div style="background:var(--black);">
+    <div style="width:100%;height:60px;background:var(--surface);clip-path:polygon(100% 0,100% 100%,0 100%);"></div>
+  </div>
+
+  <!-- WORKFLOW -->
+  <section id="workflow">
+    <div class="workflow-inner">
+      <div class="reveal">
+        <p class="section-tag">Designed For Real Workflow</p>
+        <h2>Inspiring.<br />Precise.<br />Musical.</h2>
+        <div class="workflow-steps">
+          <div class="wf-step">
+            <span class="wf-num">01</span>
+            <div class="wf-text">
+              <h4>Drop It On A Bus</h4>
+              <p>OKAB is built to process full stems, buses, and individual channels with equal authority.</p>
+            </div>
+          </div>
+          <div class="wf-step">
+            <span class="wf-num">02</span>
+            <div class="wf-text">
+              <h4>Choose Your Preset</h4>
+              <p>Strong preset families organized by intent — dark, atmospheric, impact, cinematic, body.</p>
+            </div>
+          </div>
+          <div class="wf-step">
+            <span class="wf-num">03</span>
+            <div class="wf-text">
+              <h4>Shape Your Character</h4>
+              <p>Focused controls, smooth behavior, and a mix-safe engine that stays musical while you push it.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <blockquote class="workflow-quote">
+          <strong>Strong preset families.</strong> Focused controls. Smooth parameter behavior.
+          A <strong>mix-safe engine</strong> that stays musical while you push it.
+          Designed to feel inspiring in the moment, but still <strong>precise enough for professional sessions.</strong>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLANT -->
+  <div style="background:var(--surface);">
+    <div style="width:100%;height:60px;background:var(--black);clip-path:polygon(0 0,100% 100%,0 100%);"></div>
+  </div>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="pricing-inner reveal">
+      <p class="section-tag" style="justify-content:center;">Get OKAB</p>
+      <h2>One Price.<br />Forever Yours.</h2>
+      <div class="price-card">
+        <p class="price-amount"><sup>$</sup>45</p>
+        <p class="price-label">One-time purchase · No subscription</p>
+        <ul class="price-features">
+          <li>VST3 / AU / AAX</li>
+          <li>Windows &amp; macOS</li>
+          <li>Free future updates</li>
+          <li>Full cinematic preset library</li>
+          <li>Instant download after purchase</li>
+        </ul>
+        <a href="YOUR_STRIPE_LINK" class="btn-buy-lg">Get OKAB — $45</a>
+        <p class="price-sub">Secure checkout · Instant delivery</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <img src="logo.png" alt="OKAB Audio" class="footer-logo" />
+    <p class="footer-copy">© 2025 OKAB Audio. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Nav scroll state
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    }, { passive: true });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Animated waveform bars
+    const wf = document.getElementById('waveform');
+    if (wf) {
+      const heights = [20,35,55,80,65,90,75,95,60,45,70,85,50,40,65,80,55,70,45,30,60,75,55,35,50,65,40,55,80,60,45,70,55,35,48,65];
+      heights.forEach((h, i) => {
+        const bar = document.createElement('div');
+        bar.className = 'uc-bar';
+        bar.style.height = h + 'px';
+        bar.style.animationDelay = (i * 0.06) + 's';
+        bar.style.animationDuration = (1.2 + Math.random() * 0.8) + 's';
+        wf.appendChild(bar);
+      });
+    }
+  </script>
+</body>
+</html>
