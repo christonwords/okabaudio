@@ -4,24 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OKAB — Cinematic Sound Designer</title>
-  <meta name="description" content="OKAB is a cinematic sound designer VST plugin built to turn ordinary audio into powerful, film-ready character. $45 one-time purchase." />
+  <meta name="description" content="OKAB is a cinematic sound designer VST plugin built to turn ordinary audio into powerful, film-ready character. Only $9.99." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --black:    #080808;
-      --dark:     #0f0f0f;
-      --surface:  #141414;
-      --border:   #252525;
-      --muted:    #444;
-      --silver:   #c8c8c8;
-      --white:    #e8e8e8;
-      --gold:     #c8a96e;
-      --gold-dim: #9a7d4a;
-      --glow:     rgba(200, 169, 110, 0.18);
+      --gold:       #c9956c;
+      --gold-hi:    #e8b4a0;
+      --gold-lo:    #8a5a42;
+      --white:      #f5f0ec;
+      --silver:     #c4b8b0;
+      --muted:      #6a5248;
+      --black:      #0e0c0b;
+      --glass-bg:   rgba(255,248,244,0.04);
+      --glass-hi:   rgba(255,255,255,0.13);
+      --glass-lo:   rgba(0,0,0,0.35);
+      --glass-bd:   rgba(255,220,200,0.09);
+      --gold-glow:  rgba(201,149,108,0.22);
     }
 
     html { scroll-behavior: smooth; }
@@ -29,62 +31,102 @@
     body {
       background: var(--black);
       color: var(--white);
-      font-family: 'Barlow', sans-serif;
+      font-family: 'DM Sans', sans-serif;
       font-weight: 300;
       overflow-x: hidden;
-      cursor: default;
+      line-height: 1.6;
     }
 
-    /* ── GRAIN OVERLAY ── */
-    body::before {
+    /* ── CANVAS BG ── */
+    #bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── GRAIN ── */
+    body::after {
       content: '';
       position: fixed;
       inset: 0;
-      z-index: 999;
+      z-index: 9999;
       pointer-events: none;
-      opacity: 0.032;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      background-size: 200px 200px;
+      opacity: 0.028;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+
+    /* ── GLASS UTIL ── */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(28px) saturate(160%);
+      -webkit-backdrop-filter: blur(28px) saturate(160%);
+      border: 1px solid var(--glass-bd);
+      box-shadow:
+        0 2px 0 0 var(--glass-hi) inset,
+        0 -1px 0 0 rgba(0,0,0,0.3) inset,
+        0 24px 64px rgba(0,0,0,0.55),
+        0 4px 16px rgba(0,0,0,0.3);
     }
 
     /* ── NAV ── */
-    nav {
+    #nav {
       position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 20px 48px;
-      background: linear-gradient(to bottom, rgba(8,8,8,0.95), transparent);
-      transition: background 0.3s;
+      padding: 12px 20px 12px 24px;
+      border-radius: 100px;
+      width: min(92vw, 820px);
+      transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
     }
-    nav.scrolled {
-      background: rgba(8,8,8,0.97);
-      border-bottom: 1px solid var(--border);
+    #nav.glass {
+      background: rgba(12,10,8,0.55);
     }
     .nav-logo {
-      height: 32px;
+      height: 26px;
       filter: brightness(0) invert(1);
-      opacity: 0.92;
+      opacity: 0.88;
     }
-    .nav-buy {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 600;
-      font-size: 0.8rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--black);
-      background: var(--gold);
-      padding: 9px 22px;
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .nav-link {
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      color: var(--silver);
       text-decoration: none;
-      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-      transition: background 0.2s, transform 0.15s;
+      transition: color 0.2s;
     }
-    .nav-buy:hover {
-      background: #d9b97e;
+    .nav-link:hover { color: var(--white); }
+    .nav-cta {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      color: var(--black);
+      background: linear-gradient(135deg, var(--gold-hi), var(--gold));
+      padding: 10px 22px;
+      border-radius: 100px;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(201,149,108,0.35), 0 1px 0 rgba(255,255,255,0.3) inset;
+      transition: transform 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    .nav-cta:hover {
       transform: translateY(-1px);
+      box-shadow: 0 8px 32px rgba(201,149,108,0.45), 0 1px 0 rgba(255,255,255,0.3) inset;
     }
+
+    /* ── MAIN WRAP ── */
+    main { position: relative; z-index: 1; }
 
     /* ── HERO ── */
     #hero {
@@ -94,332 +136,316 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 120px 24px 80px;
+      padding: 140px 24px 100px;
       position: relative;
-      overflow: hidden;
     }
-    .hero-bg {
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 70% 50% at 50% 60%, rgba(200,169,110,0.055) 0%, transparent 70%),
-        radial-gradient(ellipse 100% 60% at 50% 100%, rgba(200,169,110,0.03) 0%, transparent 60%);
-      pointer-events: none;
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 28px;
+      padding: 8px 20px;
+      border-radius: 100px;
+      background: rgba(201,149,108,0.08);
+      border: 1px solid rgba(201,149,108,0.18);
     }
-    .hero-lines {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
+    .hero-eyebrow-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px var(--gold);
+      animation: breathe 2.5s ease-in-out infinite;
     }
-    .hero-lines::before,
-    .hero-lines::after {
+    @keyframes breathe {
+      0%,100% { opacity: 1; box-shadow: 0 0 8px var(--gold); }
+      50% { opacity: 0.4; box-shadow: 0 0 2px var(--gold); }
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 4.6rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      max-width: 760px;
+      margin-bottom: 28px;
+    }
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--gold-hi) 0%, var(--gold) 50%, var(--gold-lo) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      line-height: 1.8;
+      color: var(--silver);
+      max-width: 520px;
+      margin: 0 auto 52px;
+    }
+    .hero-cta-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn-primary {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      color: var(--black);
+      background: linear-gradient(135deg, var(--gold-hi), var(--gold) 60%, #8a5a42);
+      padding: 18px 52px;
+      border-radius: 100px;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow:
+        0 8px 40px rgba(201,149,108,0.4),
+        0 1px 0 rgba(255,255,255,0.4) inset,
+        0 -1px 0 rgba(0,0,0,0.2) inset;
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s;
+      position: relative;
+    }
+    .btn-primary::after {
       content: '';
       position: absolute;
-      left: -20%;
-      right: -20%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent 0%, rgba(200,169,110,0.12) 30%, rgba(200,169,110,0.25) 50%, rgba(200,169,110,0.12) 70%, transparent 100%);
+      inset: 0;
+      border-radius: 100px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.25), transparent 60%);
+      pointer-events: none;
     }
-    .hero-lines::before { top: 35%; }
-    .hero-lines::after  { top: 65%; }
+    .btn-primary:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 16px 60px rgba(201,149,108,0.55), 0 1px 0 rgba(255,255,255,0.4) inset;
+    }
+    .btn-primary:active { transform: translateY(0) scale(0.99); }
+    .hero-meta {
+      font-size: 0.75rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .hero-meta span { margin: 0 8px; opacity: 0.5; }
 
-    .hero-logo {
-      width: 180px;
-      filter: brightness(0) invert(1);
-      opacity: 0.9;
-      margin-bottom: 48px;
+    /* ── PLUGIN 3D SHOWCASE ── */
+    #showcase {
+      padding: 0 24px 120px;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .hero-tag {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 500;
-      font-size: 0.72rem;
+    .showcase-label {
+      font-size: 0.68rem;
       letter-spacing: 0.3em;
       text-transform: uppercase;
       color: var(--gold);
-      margin-bottom: 20px;
-      position: relative;
+      margin-bottom: 40px;
       display: flex;
       align-items: center;
       gap: 12px;
     }
-    .hero-tag::before,
-    .hero-tag::after {
-      content: '';
-      width: 32px;
-      height: 1px;
-      background: var(--gold);
-      opacity: 0.6;
-    }
-    h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(3rem, 8vw, 7.5rem);
-      line-height: 0.95;
-      letter-spacing: 0.01em;
-      color: var(--white);
-      position: relative;
-      max-width: 900px;
-      margin-bottom: 32px;
-    }
-    h1 span { color: var(--gold); }
-    .hero-sub {
-      font-size: clamp(0.95rem, 1.5vw, 1.05rem);
-      line-height: 1.75;
-      color: var(--silver);
-      max-width: 560px;
-      margin: 0 auto 48px;
-      position: relative;
-      opacity: 0.85;
-    }
-    .hero-cta {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-      position: relative;
-    }
-    .btn-buy {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700;
-      font-size: 1rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: #0a0a0a;
-      background: var(--gold);
-      padding: 16px 48px;
-      text-decoration: none;
-      clip-path: polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%);
-      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 0 0 rgba(200,169,110,0);
-      display: inline-block;
-    }
-    .btn-buy:hover {
-      background: #d9b97e;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 40px rgba(200,169,110,0.25);
-    }
-    .btn-buy:active { transform: translateY(0); }
-    .hero-note {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.75rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .hero-note span {
-      color: var(--muted);
-      margin: 0 6px;
-    }
-
-    /* ── PLUGIN SHOWCASE ── */
-    #plugin-showcase {
-      background: var(--black);
-      padding: 80px 48px 0;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .showcase-glow {
-      position: absolute;
-      bottom: 0; left: 50%; transform: translateX(-50%);
-      width: 900px; height: 300px;
-      background: radial-gradient(ellipse at 50% 100%, rgba(200,169,110,0.13) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .showcase-label {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.68rem;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
     .showcase-label::before,
     .showcase-label::after {
       content: '';
-      width: 40px;
+      width: 48px;
       height: 1px;
-      background: var(--gold);
-      opacity: 0.5;
+      background: linear-gradient(90deg, transparent, var(--gold));
     }
-    .plugin-frame {
-      display: inline-block;
-      position: relative;
-      max-width: 1000px;
+    .showcase-label::after {
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+    .plugin-3d-scene {
+      perspective: 1400px;
       width: 100%;
+      max-width: 960px;
     }
-    .plugin-frame::before {
+    .plugin-3d-card {
+      position: relative;
+      transform: rotateX(6deg) rotateY(-2deg) translateZ(0);
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.4,0,0.2,1);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(201,149,108,0.15),
+        0 40px 120px rgba(0,0,0,0.8),
+        0 8px 32px rgba(0,0,0,0.6),
+        0 80px 160px rgba(201,149,108,0.06);
+      animation: float3d 6s ease-in-out infinite;
+    }
+    @keyframes float3d {
+      0%,100% { transform: rotateX(6deg) rotateY(-2deg) translateY(0); }
+      33%      { transform: rotateX(4deg) rotateY(2deg) translateY(-10px); }
+      66%      { transform: rotateX(7deg) rotateY(-4deg) translateY(-6px); }
+    }
+    .plugin-3d-card::before {
       content: '';
       position: absolute;
-      inset: -1px;
-      border: 1px solid rgba(200,169,110,0.2);
-      pointer-events: none;
-      z-index: 2;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.25) 70%, transparent 100%);
+      z-index: 10;
     }
-    .plugin-frame::after {
+    .plugin-3d-card::after {
       content: '';
       position: absolute;
-      bottom: -40px; left: 10%; right: 10%;
-      height: 80px;
-      background: radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.2) 0%, transparent 70%);
-      filter: blur(12px);
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 40%, transparent 60%, rgba(201,149,108,0.04) 100%);
       pointer-events: none;
+      z-index: 9;
     }
     .plugin-img {
       width: 100%;
       display: block;
-      position: relative;
-      z-index: 1;
+      border-radius: 16px;
+    }
+    .plugin-floor-shadow {
+      width: 70%;
+      height: 60px;
+      margin: 0 auto;
+      background: radial-gradient(ellipse at 50% 0%, rgba(201,149,108,0.18) 0%, transparent 70%);
+      filter: blur(20px);
+      transform: scaleY(0.5);
     }
     .plugin-tags {
       display: flex;
-      justify-content: center;
       flex-wrap: wrap;
-      gap: 24px;
-      padding: 48px 0 80px;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 52px;
     }
     .plugin-tag {
-      font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.72rem;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      color: var(--silver);
+      padding: 7px 16px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: border-color 0.25s, color 0.25s;
     }
-    .plugin-tag::before {
-      content: '';
-      width: 4px; height: 4px;
-      background: var(--gold);
-      opacity: 0.6;
-      transform: rotate(45deg);
-    }
-
-    /* ── DIAGONAL DIVIDER ── */
-    .divider-slant {
-      width: 100%;
-      height: 60px;
-      background: var(--surface);
-      clip-path: polygon(0 100%, 100% 0, 100% 100%);
-      margin-top: -1px;
-    }
-    .divider-slant-rev {
-      width: 100%;
-      height: 60px;
-      background: var(--surface);
-      clip-path: polygon(0 0, 100% 100%, 0 100%);
-      margin-bottom: -1px;
+    .plugin-tag:hover {
+      border-color: rgba(201,149,108,0.3);
+      color: var(--gold);
     }
 
     /* ── SECTION BASE ── */
-    section {
-      padding: 100px 48px;
+    .section {
+      padding: 120px 40px;
       position: relative;
     }
-    .section-tag {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 500;
+    .section-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+    .section-eyebrow {
       font-size: 0.68rem;
-      letter-spacing: 0.3em;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
       color: var(--gold);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .section-tag::before {
-      content: '';
-      width: 24px;
-      height: 1px;
-      background: var(--gold);
+      margin-bottom: 20px;
     }
     h2 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(2.2rem, 4vw, 3.8rem);
-      letter-spacing: 0.02em;
-      line-height: 1;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.4rem, 4.5vw, 4.2rem);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
       color: var(--white);
-      margin-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    h2 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--gold-hi), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     .section-sub {
-      font-size: 0.95rem;
+      font-size: 1rem;
       color: var(--silver);
-      opacity: 0.75;
-      line-height: 1.7;
-      max-width: 520px;
+      line-height: 1.75;
+      max-width: 480px;
     }
 
     /* ── FEATURES ── */
-    #features {
-      background: var(--surface);
+    #features { background: transparent; }
+    .feat-header {
+      margin-bottom: 60px;
     }
-    .features-header {
-      max-width: 1200px;
-      margin: 0 auto 60px;
-    }
-    .features-grid {
+    .feat-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1px;
-      max-width: 1200px;
-      margin: 0 auto;
-      background: var(--border);
-      border: 1px solid var(--border);
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
     }
     .feat-card {
-      background: var(--surface);
-      padding: 40px 32px;
+      padding: 36px 28px;
+      border-radius: 20px;
       position: relative;
       overflow: hidden;
-      transition: background 0.3s;
+      cursor: default;
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .feat-card:hover {
+      transform: translateY(-6px) scale(1.01);
     }
     .feat-card::before {
       content: '';
       position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--gold);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
     }
-    .feat-card:hover { background: #1a1a1a; }
-    .feat-card:hover::before { transform: scaleX(1); }
+    .feat-card-glow {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.4s;
+      background: radial-gradient(ellipse 80% 60% at 30% 30%, rgba(201,149,108,0.08), transparent 60%);
+      border-radius: 20px;
+      pointer-events: none;
+    }
+    .feat-card:hover .feat-card-glow { opacity: 1; }
     .feat-icon {
-      width: 36px;
-      height: 36px;
-      margin-bottom: 20px;
-      position: relative;
+      width: 44px;
+      height: 44px;
+      margin-bottom: 24px;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(201,149,108,0.1);
+      border: 1px solid rgba(201,149,108,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .feat-icon svg { width: 100%; height: 100%; }
     .feat-name {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.4rem;
-      letter-spacing: 0.06em;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.01em;
       color: var(--white);
       margin-bottom: 10px;
     }
     .feat-desc {
       font-size: 0.85rem;
       color: var(--silver);
-      opacity: 0.65;
       line-height: 1.65;
+      opacity: 0.8;
     }
 
     /* ── USE CASES ── */
-    #usecases {
-      background: var(--black);
-    }
-    .usecases-inner {
-      max-width: 1200px;
-      margin: 0 auto;
+    #usecases { background: transparent; }
+    .usecases-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 80px;
@@ -432,65 +458,60 @@
       margin-top: 36px;
     }
     .uc-pill {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 500;
       font-size: 0.8rem;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding: 8px 18px;
-      border: 1px solid var(--border);
+      padding: 9px 20px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
       color: var(--silver);
-      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
-      transition: border-color 0.25s, color 0.25s, background 0.25s;
-      background: transparent;
+      transition: all 0.25s;
+      cursor: default;
     }
     .uc-pill:hover {
-      border-color: var(--gold);
+      background: rgba(201,149,108,0.1);
+      border-color: rgba(201,149,108,0.25);
       color: var(--gold);
-      background: rgba(200,169,110,0.06);
     }
-    .uc-visual {
-      position: relative;
-      height: 320px;
-      border: 1px solid var(--border);
+    .uc-visual-glass {
+      border-radius: 24px;
+      padding: 60px 40px;
       display: flex;
       align-items: center;
       justify-content: center;
+      height: 300px;
+      position: relative;
       overflow: hidden;
-      clip-path: polygon(20px 0%, 100% 0%, calc(100% - 20px) 100%, 0% 100%);
     }
-    .uc-visual-bg {
+    .uc-visual-glass::before {
+      content: '';
       position: absolute;
       inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 50% 50%, rgba(200,169,110,0.08) 0%, transparent 70%);
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(201,149,108,0.07) 0%, transparent 70%);
     }
     .uc-waveform {
       display: flex;
       align-items: center;
       gap: 3px;
-      height: 100px;
+      height: 80px;
+      position: relative;
+      z-index: 1;
     }
     .uc-bar {
       width: 3px;
-      background: var(--gold);
+      background: linear-gradient(to top, rgba(201,149,108,0.3), rgba(201,149,108,0.9));
       border-radius: 2px;
-      opacity: 0.6;
-      animation: pulse 1.4s ease-in-out infinite;
+      animation: wavepulse 1.4s ease-in-out infinite;
     }
-
-    @keyframes pulse {
-      0%, 100% { transform: scaleY(1); opacity: 0.4; }
-      50%       { transform: scaleY(1.6); opacity: 0.9; }
+    @keyframes wavepulse {
+      0%,100% { transform: scaleY(0.6); opacity: 0.5; }
+      50%      { transform: scaleY(1); opacity: 1; }
     }
 
     /* ── WORKFLOW ── */
-    #workflow {
-      background: var(--surface);
-    }
-    .workflow-inner {
-      max-width: 1200px;
-      margin: 0 auto;
+    #workflow { background: transparent; }
+    .workflow-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 80px;
@@ -500,239 +521,351 @@
       display: flex;
       flex-direction: column;
       gap: 0;
-      margin-top: 40px;
+      margin-top: 44px;
     }
     .wf-step {
       display: flex;
+      gap: 24px;
       align-items: flex-start;
-      gap: 20px;
       padding: 28px 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: padding-left 0.3s;
     }
     .wf-step:last-child { border-bottom: none; }
+    .wf-step:hover { padding-left: 8px; }
     .wf-num {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 2rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.8rem;
       color: var(--gold);
-      opacity: 0.4;
-      min-width: 40px;
+      opacity: 0.3;
+      min-width: 36px;
       line-height: 1;
     }
-    .wf-text h4 {
-      font-family: 'Barlow Condensed', sans-serif;
+    .wf-title {
+      font-family: 'Syne', sans-serif;
       font-weight: 600;
-      font-size: 1rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      font-size: 0.92rem;
       color: var(--white);
       margin-bottom: 6px;
+      letter-spacing: 0.02em;
     }
-    .wf-text p {
-      font-size: 0.85rem;
+    .wf-desc {
+      font-size: 0.84rem;
       color: var(--silver);
-      opacity: 0.65;
       line-height: 1.6;
+      opacity: 0.7;
     }
-    .workflow-quote {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 300;
-      font-size: clamp(1.3rem, 2.5vw, 1.9rem);
-      line-height: 1.5;
+    .workflow-quote-glass {
+      border-radius: 24px;
+      padding: 52px 44px;
+      position: relative;
+      overflow: hidden;
+    }
+    .workflow-quote-glass::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    }
+    blockquote {
+      font-family: 'DM Sans', sans-serif;
+      font-style: italic;
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      line-height: 1.6;
       color: var(--silver);
-      border-left: 3px solid var(--gold);
-      padding-left: 28px;
+      position: relative;
+      z-index: 1;
     }
-    .workflow-quote strong {
+    blockquote strong {
       color: var(--white);
-      font-weight: 500;
+      font-style: normal;
+    }
+    .quote-glow {
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(ellipse, rgba(201,149,108,0.08) 0%, transparent 70%);
+      pointer-events: none;
     }
 
     /* ── PRICING ── */
     #pricing {
-      background: var(--black);
+      background: transparent;
       text-align: center;
     }
-    .pricing-inner {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .price-card {
-      border: 1px solid var(--border);
-      padding: 60px 48px;
-      margin-top: 48px;
+    .pricing-glass {
+      max-width: 540px;
+      margin: 52px auto 0;
+      border-radius: 28px;
+      padding: 64px 52px;
       position: relative;
-      clip-path: polygon(24px 0%, 100% 0%, calc(100% - 24px) 100%, 0% 100%);
-      background: var(--surface);
+      overflow: hidden;
     }
-    .price-card::before {
+    .pricing-glass::before {
       content: '';
       position: absolute;
-      top: 0; left: 24px; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--gold), transparent);
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.25) 70%, transparent);
+    }
+    .pricing-glow-inner {
+      position: absolute;
+      bottom: -60px; left: 50%;
+      transform: translateX(-50%);
+      width: 300px; height: 200px;
+      background: radial-gradient(ellipse, rgba(201,149,108,0.12) 0%, transparent 70%);
+      pointer-events: none;
     }
     .price-amount {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 5rem;
-      color: var(--gold);
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 3.5rem;
       line-height: 1;
       margin-bottom: 4px;
-    }
-    .price-amount sup {
-      font-size: 2rem;
-      vertical-align: top;
-      margin-top: 14px;
-      display: inline-block;
+      background: linear-gradient(135deg, var(--gold-hi) 0%, var(--gold) 50%, var(--gold-lo) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 4px 24px rgba(201,149,108,0.3));
     }
     .price-label {
-      font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.72rem;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 36px;
+      margin-bottom: 40px;
     }
     .price-features {
       list-style: none;
-      margin-bottom: 40px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
+      margin-bottom: 44px;
     }
     .price-features li {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.85rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      font-size: 0.88rem;
+      letter-spacing: 0.06em;
       color: var(--silver);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
     }
     .price-features li::before {
       content: '';
-      width: 16px;
+      width: 18px;
       height: 1px;
       background: var(--gold);
-      opacity: 0.6;
+      opacity: 0.5;
     }
-    .btn-buy-lg {
-      font-family: 'Barlow Condensed', sans-serif;
+    .btn-primary-lg {
+      font-family: 'Syne', sans-serif;
       font-weight: 700;
-      font-size: 1.05rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #0a0a0a;
-      background: var(--gold);
-      padding: 18px 64px;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      color: var(--black);
+      background: linear-gradient(135deg, var(--gold-hi), var(--gold) 60%, #8a5a42);
+      padding: 20px 64px;
+      border-radius: 100px;
       text-decoration: none;
-      clip-path: polygon(18px 0%, 100% 0%, calc(100% - 18px) 100%, 0% 100%);
       display: inline-block;
-      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-      margin-bottom: 18px;
+      position: relative;
+      box-shadow:
+        0 8px 40px rgba(201,149,108,0.4),
+        0 1px 0 rgba(255,255,255,0.45) inset;
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s;
+      margin-bottom: 20px;
     }
-    .btn-buy-lg:hover {
-      background: #d9b97e;
-      transform: translateY(-2px);
-      box-shadow: 0 12px 50px rgba(200,169,110,0.3);
+    .btn-primary-lg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 100px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.25), transparent 60%);
+      pointer-events: none;
+    }
+    .btn-primary-lg:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 16px 60px rgba(201,149,108,0.55), 0 1px 0 rgba(255,255,255,0.4) inset;
     }
     .price-sub {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
     }
 
+    /* ── CONTACT ── */
+    #contact { background: transparent; text-align: center; }
+    .contact-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 820px;
+      margin: 52px auto 0;
+    }
+    .contact-card {
+      border-radius: 20px;
+      padding: 36px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .contact-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    }
+    .contact-card:hover { transform: translateY(-6px); }
+    .contact-card-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: rgba(201,149,108,0.1);
+      border: 1px solid rgba(201,149,108,0.18);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-card-icon svg { width: 24px; height: 24px; }
+    .contact-card-label {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--white);
+      letter-spacing: 0.02em;
+    }
+    .contact-card-val {
+      font-size: 0.8rem;
+      color: var(--silver);
+      opacity: 0.75;
+      word-break: break-all;
+    }
+
     /* ── FOOTER ── */
     footer {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 40px 48px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 36px 48px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: relative;
+      z-index: 1;
     }
     .footer-logo {
       height: 22px;
       filter: brightness(0) invert(1);
-      opacity: 0.4;
+      opacity: 0.3;
     }
     .footer-copy {
-      font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.72rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
     }
 
-    /* ── ANIMATIONS ── */
+    /* ── REVEAL ── */
     .reveal {
       opacity: 0;
-      transform: translateY(28px);
-      transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
-                  transform 0.7s cubic-bezier(0.4,0,0.2,1);
+      transform: translateY(32px);
+      transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1);
     }
-    .reveal.visible {
-      opacity: 1;
-      transform: none;
-    }
-    .reveal-delay-1 { transition-delay: 0.1s; }
-    .reveal-delay-2 { transition-delay: 0.2s; }
-    .reveal-delay-3 { transition-delay: 0.3s; }
-    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal.in { opacity: 1; transform: none; }
+    .d1 { transition-delay: 0.1s; }
+    .d2 { transition-delay: 0.2s; }
+    .d3 { transition-delay: 0.3s; }
+    .d4 { transition-delay: 0.4s; }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      nav { padding: 16px 24px; }
-      section { padding: 72px 24px; }
-      .usecases-inner,
-      .workflow-inner { grid-template-columns: 1fr; gap: 48px; }
-      .uc-visual { display: none; }
-      footer { flex-direction: column; gap: 16px; text-align: center; }
-      .features-grid { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 1024px) {
+      .feat-grid { grid-template-columns: repeat(3, 1fr); }
+      .contact-cards { grid-template-columns: 1fr 1fr 1fr; }
     }
-    @media (max-width: 560px) {
-      .features-grid { grid-template-columns: 1fr; }
-      .price-card { padding: 40px 24px; clip-path: polygon(14px 0%, 100% 0%, calc(100% - 14px) 100%, 0% 100%); }
-      .btn-buy-lg { padding: 16px 40px; }
-      h1 { font-size: 3rem; }
+    @media (max-width: 900px) {
+      #nav { width: 94vw; padding: 10px 16px; top: 14px; }
+      .nav-links { display: none; }
+      .section { padding: 80px 20px; }
+      .usecases-grid, .workflow-grid { grid-template-columns: 1fr; gap: 40px; }
+      .uc-visual-glass { display: none; }
+      footer { flex-direction: column; gap: 12px; text-align: center; padding: 28px 24px; }
+      .feat-grid { grid-template-columns: 1fr 1fr; }
+      .contact-cards { grid-template-columns: 1fr; max-width: 380px; }
+      h2 { font-size: clamp(1.8rem, 6vw, 3rem); }
+    }
+    @media (max-width: 600px) {
+      #hero { padding: 120px 20px 80px; }
+      h1 { font-size: clamp(1.8rem, 7vw, 2.8rem); line-height: 1.1; }
+      .hero-sub { font-size: 0.9rem; }
+      .btn-primary { padding: 16px 36px; font-size: 0.88rem; }
+      .feat-grid { grid-template-columns: 1fr; }
+      .pricing-glass { padding: 40px 24px; }
+      .btn-primary-lg { padding: 16px 36px; font-size: 0.9rem; }
+      .section { padding: 64px 18px; }
+      #showcase { padding: 0 18px 80px; }
+    }
+    @media (max-width: 380px) {
+      h1 { font-size: 1.7rem; }
+      .nav-cta { font-size: 0.72rem; padding: 8px 14px; }
+      .price-amount { font-size: 3rem; }
+    }
+    /* Touch devices — disable 3D float so it doesn't feel broken */
+    @media (hover: none) {
+      .plugin-3d-card { animation: none; transform: rotateX(3deg) rotateY(0deg); }
     }
   </style>
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav id="nav">
-    <img src="logo.png" alt="OKAB Audio" class="nav-logo" />
-    <a href="https://buy.stripe.com/aFabJ06SH5RK4Pd0OMfEk00" class="nav-buy">Get OKAB — $45</a>
-  </nav>
+<canvas id="bg"></canvas>
+
+<!-- NAV -->
+<nav id="nav" class="glass">
+  <img src="logo.png" alt="OKAB Audio" class="nav-logo" />
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#usecases" class="nav-link">Use Cases</a>
+    <a href="#pricing" class="nav-link">Download</a>
+    <a href="#contact" class="nav-link">Contact</a>
+  </div>
+  <a href="https://okabaudio.lemonsqueezy.com/checkout/buy/c4773d32-e98c-45fa-bf25-7e12885bfe35?discount=0" class="nav-cta">Get OKAB — $9.99</a>
+</nav>
+
+<main>
 
   <!-- HERO -->
   <section id="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-lines"></div>
-    <img src="logo.png" alt="OKAB Audio" class="hero-logo" />
-    <p class="hero-tag">Cinematic Sound Designer</p>
-    <h1>Turn Ordinary Audio<br /><span>Into Film-Ready</span><br />Character</h1>
-    <p class="hero-sub">
+    <div class="hero-eyebrow reveal">
+      <span class="hero-eyebrow-dot"></span>
+      Cinematic Sound Designer · VST3 / AU / AAX
+    </div>
+    <h1 class="reveal d1">Turn Ordinary<br />Audio Into<br /><em>Film-Ready</em><br />Character</h1>
+    <p class="hero-sub reveal d2">
       OKAB is a cinematic sound designer built for one job — turning ordinary audio into powerful,
-      film-ready character. Drop it on a bus, feed it real sound, and it responds with weight,
-      movement, space, and emotion.
+      film-ready character. Drop it on a bus and it responds with weight, movement, space, and emotion.
     </p>
-    <div class="hero-cta">
-      <a href="https://buy.stripe.com/aFabJ06SH5RK4Pd0OMfEk00" class="btn-buy">Get OKAB — $45</a>
-      <p class="hero-note">One-time purchase <span>·</span> No subscription <span>·</span> VST3 / AU / AAX</p>
+    <div class="hero-cta-group reveal d3">
+      <a href="https://okabaudio.lemonsqueezy.com/checkout/buy/c4773d32-e98c-45fa-bf25-7e12885bfe35?discount=0" class="btn-primary">Get OKAB — $9.99</a>
+      <p class="hero-meta">One-time payment <span>·</span> No subscription <span>·</span> Instant download</p>
     </div>
   </section>
 
-  <!-- PLUGIN SHOWCASE -->
-  <section id="plugin-showcase">
+  <!-- PLUGIN 3D SHOWCASE -->
+  <section id="showcase">
     <p class="showcase-label reveal">The Interface</p>
-    <div class="plugin-frame reveal reveal-delay-1">
-      <img src="plugin.png" alt="OKAB Plugin Interface" class="plugin-img" />
+    <div class="plugin-3d-scene reveal d1">
+      <div class="plugin-3d-card" id="plugin3d">
+        <img src="plugin.png" alt="OKAB Plugin Interface" class="plugin-img" />
+      </div>
     </div>
-    <div class="plugin-tags reveal reveal-delay-2">
+    <div class="plugin-floor-shadow"></div>
+    <div class="plugin-tags reveal d2">
       <span class="plugin-tag">Resonance Core</span>
       <span class="plugin-tag">Impact Engine</span>
       <span class="plugin-tag">Sub Foundation</span>
@@ -740,223 +873,352 @@
       <span class="plugin-tag">Stereo Scope</span>
       <span class="plugin-tag">33 Factory Presets</span>
     </div>
-    <div class="showcase-glow"></div>
   </section>
-
-  <!-- SLANT -->
-  <div class="divider-slant"></div>
 
   <!-- FEATURES -->
-  <section id="features">
-    <div class="features-header reveal">
-      <p class="section-tag">Sound Dimensions</p>
-      <h2>Five Dimensions.<br />One Engine.</h2>
-      <p class="section-sub">Shape deep sub pressure, tight impact, harmonic body, airy bloom, and expressive overtone detail — without building layers from scratch.</p>
-    </div>
-    <div class="features-grid">
-
-      <div class="feat-card reveal reveal-delay-1">
-        <div class="feat-icon">
-          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 28 Q10 8 18 28 Q26 8 32 28" stroke="#c8a96e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <line x1="18" y1="32" x2="18" y2="4" stroke="#c8a96e" stroke-width="1" opacity="0.3"/>
-          </svg>
-        </div>
-        <p class="feat-name">Sub Pressure</p>
-        <p class="feat-desc">Deep foundational weight that fills the room. The kind of low end that makes a scene feel inevitable.</p>
+  <section class="section" id="features">
+    <div class="section-inner">
+      <div class="feat-header reveal">
+        <p class="section-eyebrow">Sound Dimensions</p>
+        <h2>Five Dimensions.<br /><em>One Engine.</em></h2>
+        <p class="section-sub">Shape deep sub pressure, tight impact, harmonic body, airy bloom, and expressive overtone detail — without building layers from scratch.</p>
       </div>
+      <div class="feat-grid">
 
-      <div class="feat-card reveal reveal-delay-2">
-        <div class="feat-icon">
-          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="6" y="14" width="4" height="16" fill="#c8a96e" opacity="0.8"/>
-            <rect x="14" y="8" width="4" height="22" fill="#c8a96e"/>
-            <rect x="22" y="18" width="4" height="12" fill="#c8a96e" opacity="0.6"/>
-            <rect x="30" y="22" width="4" height="8" fill="#c8a96e" opacity="0.3"/>
-          </svg>
+        <div class="feat-card glass reveal d1">
+          <div class="feat-card-glow"></div>
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M3 18 Q7 4 12 18 Q17 4 21 18" stroke="#c9956c" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            </svg>
+          </div>
+          <p class="feat-name">Sub Pressure</p>
+          <p class="feat-desc">Deep foundational weight that fills the room. The kind of low end that makes a scene feel inevitable.</p>
         </div>
-        <p class="feat-name">Tight Impact</p>
-        <p class="feat-desc">Punch and transient energy shaped for cinematic hits — braams, drops, stingers, and moments of force.</p>
-      </div>
 
-      <div class="feat-card reveal reveal-delay-3">
-        <div class="feat-icon">
-          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="18" cy="18" r="10" stroke="#c8a96e" stroke-width="1.5" fill="none"/>
-            <circle cx="18" cy="18" r="6" stroke="#c8a96e" stroke-width="1" fill="none" opacity="0.5"/>
-            <circle cx="18" cy="18" r="2" fill="#c8a96e"/>
-          </svg>
+        <div class="feat-card glass reveal d2">
+          <div class="feat-card-glow"></div>
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="10" width="3" height="10" rx="1" fill="#c9956c" opacity="0.8"/>
+              <rect x="8" y="6"  width="3" height="14" rx="1" fill="#c9956c"/>
+              <rect x="13" y="12" width="3" height="8"  rx="1" fill="#c9956c" opacity="0.6"/>
+              <rect x="18" y="15" width="3" height="5"  rx="1" fill="#c9956c" opacity="0.35"/>
+            </svg>
+          </div>
+          <p class="feat-name">Tight Impact</p>
+          <p class="feat-desc">Punch and transient energy shaped for cinematic hits — braams, drops, stingers, and moments of force.</p>
         </div>
-        <p class="feat-name">Harmonic Body</p>
-        <p class="feat-desc">Rich midrange density and tonal warmth that gives your mix a spine — character that cuts through.</p>
-      </div>
 
-      <div class="feat-card reveal reveal-delay-4">
-        <div class="feat-icon">
-          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 6 C8 6 4 14 4 18 C4 22 8 30 18 30 C28 30 32 22 32 18 C32 14 28 6 18 6Z" stroke="#c8a96e" stroke-width="1.5" fill="none"/>
-            <path d="M18 10 C12 10 10 14 10 18 C10 22 12 26 18 26 C24 26 26 22 26 18" stroke="#c8a96e" stroke-width="1" fill="none" opacity="0.4"/>
-          </svg>
+        <div class="feat-card glass reveal d3">
+          <div class="feat-card-glow"></div>
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="7" stroke="#c9956c" stroke-width="1.5"/>
+              <circle cx="12" cy="12" r="4" stroke="#c9956c" stroke-width="1" opacity="0.5"/>
+              <circle cx="12" cy="12" r="1.5" fill="#c9956c"/>
+            </svg>
+          </div>
+          <p class="feat-name">Harmonic Body</p>
+          <p class="feat-desc">Rich midrange density and tonal warmth that gives your mix a spine — character that cuts through.</p>
         </div>
-        <p class="feat-name">Airy Bloom</p>
-        <p class="feat-desc">Open, atmospheric high-end that breathes life into pads, textures, and spatial processing.</p>
-      </div>
 
-      <div class="feat-card reveal reveal-delay-1">
-        <div class="feat-icon">
-          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="8" y1="28" x2="28" y2="8" stroke="#c8a96e" stroke-width="1.5" stroke-linecap="round"/>
-            <circle cx="12" cy="24" r="2" fill="#c8a96e"/>
-            <circle cx="18" cy="18" r="2" fill="#c8a96e" opacity="0.7"/>
-            <circle cx="24" cy="12" r="2" fill="#c8a96e" opacity="0.4"/>
-          </svg>
+        <div class="feat-card glass reveal d4">
+          <div class="feat-card-glow"></div>
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3 C5 3 3 8 3 12 C3 16 5 21 12 21 C19 21 21 16 21 12 C21 8 19 3 12 3Z" stroke="#c9956c" stroke-width="1.5" fill="none"/>
+              <path d="M12 7 C8 7 7 9 7 12 C7 15 8 17 12 17" stroke="#c9956c" stroke-width="1" fill="none" opacity="0.4"/>
+            </svg>
+          </div>
+          <p class="feat-name">Airy Bloom</p>
+          <p class="feat-desc">Open, atmospheric high-end that breathes life into pads, textures, and spatial processing.</p>
         </div>
-        <p class="feat-name">Overtone Detail</p>
-        <p class="feat-desc">Expressive harmonic shimmer for enhanced leads, orchestral movement, and textural complexity.</p>
-      </div>
 
+        <div class="feat-card glass reveal d1">
+          <div class="feat-card-glow"></div>
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <line x1="5" y1="19" x2="19" y2="5" stroke="#c9956c" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8"  cy="16" r="1.5" fill="#c9956c"/>
+              <circle cx="12" cy="12" r="1.5" fill="#c9956c" opacity="0.65"/>
+              <circle cx="16" cy="8"  r="1.5" fill="#c9956c" opacity="0.35"/>
+            </svg>
+          </div>
+          <p class="feat-name">Overtone Detail</p>
+          <p class="feat-desc">Expressive harmonic shimmer for enhanced leads, orchestral movement, and textural complexity.</p>
+        </div>
+
+      </div>
     </div>
   </section>
-
-  <!-- SLANT REV -->
-  <div style="background: var(--surface);">
-    <div style="width:100%;height:60px;background:var(--black);clip-path:polygon(0 0,100% 100%,0 100%);"></div>
-  </div>
 
   <!-- USE CASES -->
-  <section id="usecases">
-    <div class="usecases-inner">
-      <div class="reveal">
-        <p class="section-tag">Built For</p>
-        <h2>Big Screen<br />Energy. Fast.</h2>
-        <p class="section-sub">
-          From dark bass tones and trailer braams to atmospheric piano texture and lead enhancement,
-          OKAB gives you a fast path to cinematic power.
-        </p>
-        <div class="uc-pills">
-          <span class="uc-pill">Dark Bass Tone</span>
-          <span class="uc-pill">Trailer Braams</span>
-          <span class="uc-pill">Atmospheric Piano</span>
-          <span class="uc-pill">Lead Enhancement</span>
-          <span class="uc-pill">Bus Processing</span>
-          <span class="uc-pill">Hybrid Scoring</span>
+  <section class="section" id="usecases">
+    <div class="section-inner">
+      <div class="usecases-grid">
+        <div class="reveal">
+          <p class="section-eyebrow">Built For</p>
+          <h2>Big Screen<br /><em>Energy. Fast.</em></h2>
+          <p class="section-sub">From dark bass tones and trailer braams to atmospheric piano texture and lead enhancement, OKAB gives you a fast path to cinematic power.</p>
+          <div class="uc-pills">
+            <span class="uc-pill">Dark Bass Tone</span>
+            <span class="uc-pill">Trailer Braams</span>
+            <span class="uc-pill">Atmospheric Piano</span>
+            <span class="uc-pill">Lead Enhancement</span>
+            <span class="uc-pill">Bus Processing</span>
+            <span class="uc-pill">Hybrid Scoring</span>
+          </div>
         </div>
-      </div>
-      <div class="uc-visual reveal reveal-delay-2">
-        <div class="uc-visual-bg"></div>
-        <div class="uc-waveform" id="waveform"></div>
+        <div class="uc-visual-glass glass reveal d2">
+          <div class="uc-waveform" id="waveform"></div>
+        </div>
       </div>
     </div>
   </section>
-
-  <!-- SLANT -->
-  <div style="background:var(--black);">
-    <div style="width:100%;height:60px;background:var(--surface);clip-path:polygon(100% 0,100% 100%,0 100%);"></div>
-  </div>
 
   <!-- WORKFLOW -->
-  <section id="workflow">
-    <div class="workflow-inner">
-      <div class="reveal">
-        <p class="section-tag">Designed For Real Workflow</p>
-        <h2>Inspiring.<br />Precise.<br />Musical.</h2>
-        <div class="workflow-steps">
-          <div class="wf-step">
-            <span class="wf-num">01</span>
-            <div class="wf-text">
-              <h4>Drop It On A Bus</h4>
-              <p>OKAB is built to process full stems, buses, and individual channels with equal authority.</p>
+  <section class="section" id="workflow">
+    <div class="section-inner">
+      <div class="workflow-grid">
+        <div class="reveal">
+          <p class="section-eyebrow">Designed For Real Workflow</p>
+          <h2>Inspiring.<br /><em>Precise.</em><br />Musical.</h2>
+          <div class="workflow-steps">
+            <div class="wf-step">
+              <span class="wf-num">01</span>
+              <div>
+                <p class="wf-title">Drop It On A Bus</p>
+                <p class="wf-desc">OKAB processes full stems, buses, and individual channels with equal authority.</p>
+              </div>
             </div>
-          </div>
-          <div class="wf-step">
-            <span class="wf-num">02</span>
-            <div class="wf-text">
-              <h4>Choose Your Preset</h4>
-              <p>Strong preset families organized by intent — dark, atmospheric, impact, cinematic, body.</p>
+            <div class="wf-step">
+              <span class="wf-num">02</span>
+              <div>
+                <p class="wf-title">Choose Your Preset</p>
+                <p class="wf-desc">Strong preset families organized by intent — dark, atmospheric, impact, cinematic, body.</p>
+              </div>
             </div>
-          </div>
-          <div class="wf-step">
-            <span class="wf-num">03</span>
-            <div class="wf-text">
-              <h4>Shape Your Character</h4>
-              <p>Focused controls, smooth behavior, and a mix-safe engine that stays musical while you push it.</p>
+            <div class="wf-step">
+              <span class="wf-num">03</span>
+              <div>
+                <p class="wf-title">Shape Your Character</p>
+                <p class="wf-desc">Focused controls, smooth behavior, and a mix-safe engine that stays musical while you push it.</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="reveal reveal-delay-2">
-        <blockquote class="workflow-quote">
-          <strong>Strong preset families.</strong> Focused controls. Smooth parameter behavior.
-          A <strong>mix-safe engine</strong> that stays musical while you push it.
-          Designed to feel inspiring in the moment, but still <strong>precise enough for professional sessions.</strong>
-        </blockquote>
+        <div class="reveal d2">
+          <div class="workflow-quote-glass glass">
+            <div class="quote-glow"></div>
+            <blockquote>
+              <strong>Strong preset families.</strong> Focused controls. Smooth parameter behavior.
+              A <strong>mix-safe engine</strong> that stays musical while you push it —
+              <strong>precise enough for professional sessions.</strong>
+            </blockquote>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- SLANT -->
-  <div style="background:var(--surface);">
-    <div style="width:100%;height:60px;background:var(--black);clip-path:polygon(0 0,100% 100%,0 100%);"></div>
-  </div>
-
   <!-- PRICING -->
-  <section id="pricing">
-    <div class="pricing-inner reveal">
-      <p class="section-tag" style="justify-content:center;">Get OKAB</p>
-      <h2>One Price.<br />Forever Yours.</h2>
-      <div class="price-card">
-        <p class="price-amount"><sup>$</sup>45</p>
-        <p class="price-label">One-time purchase · No subscription</p>
+  <section class="section" id="pricing" style="text-align:center;">
+    <div class="section-inner">
+      <div class="reveal">
+        <p class="section-eyebrow" style="justify-content:center;display:flex;align-items:center;gap:8px;">
+          <span style="width:24px;height:1px;background:var(--gold);display:inline-block;"></span>
+          Get OKAB
+          <span style="width:24px;height:1px;background:var(--gold);display:inline-block;"></span>
+        </p>
+        <h2>$9.99.<br /><em>Forever Yours.</em></h2>
+      </div>
+      <div class="pricing-glass glass reveal d1">
+        <div class="pricing-glow-inner"></div>
+        <p class="price-amount">$9.99</p>
+        <p class="price-label">One-time payment · No subscription · Instant download</p>
         <ul class="price-features">
           <li>VST3 / AU / AAX</li>
           <li>Windows &amp; macOS</li>
           <li>Free future updates</li>
           <li>Full cinematic preset library</li>
-          <li>Instant download after purchase</li>
+          <li>Instant download</li>
         </ul>
-        <a href="https://buy.stripe.com/aFabJ06SH5RK4Pd0OMfEk00" class="btn-buy-lg">Get OKAB — $45</a>
-        <p class="price-sub">Secure checkout · Instant delivery</p>
+        <a href="https://okabaudio.lemonsqueezy.com/checkout/buy/c4773d32-e98c-45fa-bf25-7e12885bfe35?discount=0" class="btn-primary-lg">Get OKAB — $9.99</a>
+        <p class="price-sub">Instant delivery via Lemon Squeezy</p>
       </div>
     </div>
   </section>
 
-  <!-- FOOTER -->
-  <footer>
-    <img src="logo.png" alt="OKAB Audio" class="footer-logo" />
-    <p class="footer-copy">© 2025 OKAB Audio. All rights reserved.</p>
-  </footer>
+  <!-- CONTACT & SUPPORT -->
+  <section class="section" id="contact">
+    <div class="section-inner">
+      <div class="reveal" style="text-align:center;">
+        <p class="section-eyebrow" style="justify-content:center;display:flex;align-items:center;gap:8px;">
+          <span style="width:24px;height:1px;background:var(--gold);display:inline-block;"></span>
+          Get In Touch
+          <span style="width:24px;height:1px;background:var(--gold);display:inline-block;"></span>
+        </p>
+        <h2>Support &amp;<br /><em>Connect.</em></h2>
+        <p class="section-sub" style="margin:0 auto;">Questions, feedback, or just want to say hi — we're here. If OKAB has been useful, a coffee goes a long way.</p>
+      </div>
+      <div class="contact-cards">
 
-  <script>
-    // Nav scroll state
-    const nav = document.getElementById('nav');
-    window.addEventListener('scroll', () => {
-      nav.classList.toggle('scrolled', window.scrollY > 60);
-    }, { passive: true });
+        <!-- Donate -->
+        <a href="https://buymeacoffee.com/morepeacee" target="_blank" rel="noopener" class="contact-card glass reveal d1">
+          <div class="contact-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1" stroke="#c9956c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" stroke="#c9956c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="6" y1="1" x2="6" y2="4" stroke="#c9956c" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="10" y1="1" x2="10" y2="4" stroke="#c9956c" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="14" y1="1" x2="14" y2="4" stroke="#c9956c" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <p class="contact-card-label">Buy Me a Coffee</p>
+          <p class="contact-card-val">buymeacoffee.com/morepeacee</p>
+        </a>
 
-    // Scroll reveal
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
-          observer.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        <!-- Instagram -->
+        <a href="https://instagram.com/christonwords" target="_blank" rel="noopener" class="contact-card glass reveal d2">
+          <div class="contact-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="20" height="20" rx="5" stroke="#c9956c" stroke-width="1.5"/>
+              <circle cx="12" cy="12" r="4" stroke="#c9956c" stroke-width="1.5"/>
+              <circle cx="17.5" cy="6.5" r="1" fill="#c9956c"/>
+            </svg>
+          </div>
+          <p class="contact-card-label">Instagram</p>
+          <p class="contact-card-val">@christonwords</p>
+        </a>
 
-    // Animated waveform bars
-    const wf = document.getElementById('waveform');
-    if (wf) {
-      const heights = [20,35,55,80,65,90,75,95,60,45,70,85,50,40,65,80,55,70,45,30,60,75,55,35,50,65,40,55,80,60,45,70,55,35,48,65];
-      heights.forEach((h, i) => {
-        const bar = document.createElement('div');
-        bar.className = 'uc-bar';
-        bar.style.height = h + 'px';
-        bar.style.animationDelay = (i * 0.06) + 's';
-        bar.style.animationDuration = (1.2 + Math.random() * 0.8) + 's';
-        wf.appendChild(bar);
-      });
-    }
-  </script>
+        <!-- Email -->
+        <a href="mailto:softparish@gmail.com" class="contact-card glass reveal d3">
+          <div class="contact-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="4" width="20" height="16" rx="3" stroke="#c9956c" stroke-width="1.5"/>
+              <path d="M2 7l10 7 10-7" stroke="#c9956c" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <p class="contact-card-label">Email</p>
+          <p class="contact-card-val">softparish@gmail.com</p>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <img src="logo.png" alt="OKAB Audio" class="footer-logo" />
+  <p class="footer-copy">© 2026 OKAB Audio. All rights reserved.</p>
+</footer>
+
+<script>
+// ── AURORA CANVAS BACKGROUND ──
+(function() {
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  let W, H, t = 0;
+
+  const orbs = [
+    { px: 0.25, py: 0.35, sx: 0.18, sy: 0.14, r: 0.55, color: [201,149,108], a: 0.10 },
+    { px: 0.75, py: 0.55, sx: 0.22, sy: 0.17, r: 0.50, color: [160,100,80],  a: 0.07 },
+    { px: 0.50, py: 0.80, sx: 0.14, sy: 0.20, r: 0.60, color: [201,149,108], a: 0.06 },
+    { px: 0.10, py: 0.70, sx: 0.19, sy: 0.13, r: 0.40, color: [100,55,40],   a: 0.07 },
+    { px: 0.88, py: 0.20, sx: 0.16, sy: 0.22, r: 0.45, color: [232,180,160], a: 0.06 },
+  ];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // deep background
+    ctx.fillStyle = '#0e0c0b';
+    ctx.fillRect(0, 0, W, H);
+
+    orbs.forEach((o, i) => {
+      const ox = (o.px + Math.sin(t * o.sx + i * 1.3) * 0.18) * W;
+      const oy = (o.py + Math.cos(t * o.sy + i * 0.9) * 0.14) * H;
+      const r  = o.r * Math.min(W, H);
+      const [rr,gg,bb] = o.color;
+      const grad = ctx.createRadialGradient(ox, oy, 0, ox, oy, r);
+      grad.addColorStop(0,   `rgba(${rr},${gg},${bb},${o.a})`);
+      grad.addColorStop(0.5, `rgba(${rr},${gg},${bb},${o.a * 0.4})`);
+      grad.addColorStop(1,   `rgba(${rr},${gg},${bb},0)`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+    });
+
+    // subtle vignette
+    const vig = ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.9);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.6)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, W, H);
+
+    t += 0.0006;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+
+// ── 3D PLUGIN MOUSE PARALLAX ──
+(function() {
+  const card = document.getElementById('plugin3d');
+  if (!card) return;
+  const scene = card.closest('.plugin-3d-scene');
+  if (!scene) return;
+
+  scene.addEventListener('mousemove', (e) => {
+    const r = scene.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width  - 0.5) * 2;
+    const y = ((e.clientY - r.top)  / r.height - 0.5) * 2;
+    card.style.animation = 'none';
+    card.style.transform = `rotateX(${-y * 8}deg) rotateY(${x * 6}deg) translateZ(0)`;
+  });
+
+  scene.addEventListener('mouseleave', () => {
+    card.style.animation = '';
+    card.style.transform = '';
+  });
+})();
+
+// ── SCROLL REVEAL ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── NAV INITIAL SHOW ──
+document.querySelectorAll('.reveal').forEach(el => {
+  if (el.id === 'nav') el.classList.add('in');
+});
+
+// ── WAVEFORM BARS ──
+(function() {
+  const wf = document.getElementById('waveform');
+  if (!wf) return;
+  const heights = [20,35,55,80,65,90,75,95,60,45,70,85,50,40,65,80,55,70,45,30,60,75,55,35,50,65,40,55,80,60,45,70,55,35,48,65];
+  heights.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'uc-bar';
+    bar.style.height = h + 'px';
+    bar.style.animationDelay = (i * 0.06) + 's';
+    bar.style.animationDuration = (1.2 + (i % 5) * 0.18) + 's';
+    wf.appendChild(bar);
+  });
+})();
+</script>
 </body>
 </html>
